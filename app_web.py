@@ -3,17 +3,16 @@ import google.generativeai as genai
 from PIL import Image
 
 # --- CONFIG HALAMAN ---
-st.set_page_config(page_title="Andrean AI Super", page_icon="🚀", layout="centered")
+st.set_page_config(page_title="Andrean AI Pro", page_icon="🤖", layout="centered")
 
 # --- SIDEBAR ---
 with st.sidebar:
-    st.title("🚀 Andrean AI v2.0")
-    st.write("Sekarang gue bisa LIAT FOTO lo, Bro!")
-    st.divider()
+    st.title("🚀 Andrean AI v4.0")
     st.write("Dibuat oleh: **ANDREAN**")
+    st.divider()
+    st.info("Klik tombol + di bawah buat menu tambahan!")
 
 st.title("🤖 Chatbot AI BY : ANDREAN")
-st.caption("Kirim teks atau upload foto, gue jabanin!")
 
 # --- SETUP API KEY ---
 API_KEY = "AIzaSyAs2eRiuYGkitmNYqj_HvIhsrQrqWbIIy8"
@@ -21,48 +20,45 @@ genai.configure(api_key=API_KEY)
 
 @st.cache_resource
 def get_model():
-    # JURUS OTOMATIS: Biar gak error 404 lagi
-    model_aktif = "gemini-pro" # Coba pake nama standar dulu
-    try:
-        for m in genai.list_models():
-            if 'generateContent' in m.supported_generation_methods:
-                model_aktif = m.name
-                break
-    except:
-        model_aktif = "models/gemini-1.5-flash" # Backup kalau list gagal
-
-    return genai.GenerativeModel(model_name=model_aktif)
+    return genai.GenerativeModel('gemini-1.5-flash')
 
 model = get_model()
 
-# --- FITUR UPLOAD GAMBAR ---
-uploaded_file = st.file_uploader("Pilih foto buat dianalisis...", type=["jpg", "jpeg", "png"])
-
-if uploaded_file:
-    image = Image.open(uploaded_file)
-    st.image(image, caption="Foto yang lo upload", use_container_width=True)
-
-# --- LOGIKA CHAT ---
+# --- INISIALISASI PESAN ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# --- TAMPILKAN CHAT ---
 for message in st.session_state.messages:
-    avatar = "👤" if message["role"] == "user" else "🤖"
-    with st.chat_message(message["role"], avatar=avatar):
+    with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("Tanya sesuatu tentang fotonya atau chat biasa..."):
+# --- MENU "+" (POPOVER) ---
+# Kita taro menu ini tepat di atas input chat biar estetik
+col1, col2 = st.columns([0.1, 0.9])
+
+with col1:
+    with st.popover("➕"):
+        st.write("### Menu Alat")
+        uploaded_file = st.file_uploader("Upload Foto", type=["jpg", "png", "jpeg"])
+        if st.button("Hapus Semua Chat"):
+            st.session_state.messages = []
+            st.rerun()
+
+# --- INPUT CHAT ---
+if prompt := st.chat_input("Tanya apa aja, Bro..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user", avatar="👤"):
+    with st.chat_message("user"):
         st.markdown(prompt)
 
-    with st.chat_message("assistant", avatar="🤖"):
-        # Jika ada gambar, kirim gambar + teks ke AI
+    with st.chat_message("assistant"):
+        # Logika analisis gambar kalau ada file di-upload
         if uploaded_file:
-            response = model.generate_content([prompt, image])
+            img = Image.open(uploaded_file)
+            response = model.generate_content([prompt, img])
+            st.image(img, width=300)
         else:
             response = model.generate_content(prompt)
             
         st.markdown(response.text)
         st.session_state.messages.append({"role": "assistant", "content": response.text})
-
