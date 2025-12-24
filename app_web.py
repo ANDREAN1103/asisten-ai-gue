@@ -20,7 +20,17 @@ genai.configure(api_key=API_KEY)
 
 @st.cache_resource
 def get_model():
-    return genai.GenerativeModel('gemini-1.5-flash')
+    # JURUS OTOMATIS: Biar gak error 404 lagi
+    model_aktif = "gemini-pro" # Coba pake nama standar dulu
+    try:
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                model_aktif = m.name
+                break
+    except:
+        model_aktif = "models/gemini-1.5-flash" # Backup kalau list gagal
+
+    return genai.GenerativeModel(model_name=model_aktif)
 
 model = get_model()
 
@@ -42,3 +52,4 @@ if prompt := st.chat_input("Tanya apa aja, Bro..."):
         response = model.generate_content(prompt)
         st.markdown(response.text)
         st.session_state.messages.append({"role": "assistant", "content": response.text})
+
