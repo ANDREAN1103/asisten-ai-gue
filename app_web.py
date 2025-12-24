@@ -6,29 +6,24 @@ st.set_page_config(page_title="Andrean AI Pro", layout="centered")
 st.markdown("<h2 style='text-align: center;'>🤖 Chatbot AI BY : ANDREAN</h2>", unsafe_allow_html=True)
 
 # --- 2. SETUP API KEY LANGSUNG ---
-# PASTE API Key lo di bawah ini (Pastiin gak ada spasi tambahan)
+# Ganti teks di bawah dengan API Key asli lo
 API_KEY = "AIzaSyC-Rsgzx2eXhCBZpzOleycWA1_CtbxBUIg" 
 genai.configure(api_key=API_KEY)
 
-# JURUS ANTI-SERVER PENUH: Coba beberapa model sekaligus
-def dapatkan_respon(prompt_user):
-    # Daftar model dari yang paling pinter sampe yang paling ringan
-    daftar_model = ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.5-flash-8b']
-    
-    for nama_model in daftar_model:
-        try:
-            model = genai.GenerativeModel(nama_model)
-            return model.generate_content(prompt_user).text
-        except Exception as e:
-            # Kalau error 429 (Penuh), dia bakal lanjut nyoba model berikutnya
-            if "429" in str(e):
-                continue
-            else:
-                return f"Ada kendala teknis: {e}"
-    
-    return "Waduh Bro, semua server Google lagi penuh banget! Coba lagi 1 menit lagi ya."
+# JURUS OTOMATIS: Mencari model yang tersedia biar gak Error 404
+@st.cache_resource
+def get_model():
+    try:
+        # Nanya ke Google model apa yang aktif buat akun lo
+        active_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        return genai.GenerativeModel(active_models[0])
+    except:
+        # Cadangan jika pencarian otomatis gagal
+        return genai.GenerativeModel('gemini-1.5-flash')
 
-# --- 3. RIWAYAT CHAT ---
+model = get_model()
+
+# --- 3. RIWAYAT CHAT (JAWABAN DI ATAS) ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -43,7 +38,14 @@ if prompt := st.chat_input("Tanya apa aja, Bro..."):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("Lagi nyari server yang kosong..."):
-            jawaban = dapatkan_respon(prompt)
-            st.markdown(jawaban)
-            st.session_state.messages.append({"role": "assistant", "content": jawaban})
+        with st.spinner("Lagi mikir..."):
+            try:
+                # Memanggil jawaban AI
+                response = model.generate_content(prompt)
+                st.markdown(response.text)
+                st.session_state.messages.append({"role": "assistant", "content": response.text})
+            except Exception as e:
+                if "429" in str(e):
+                    st.error("Server penuh! Google membatasi akun gratis. Tunggu 1-2 menit ya.")
+                else:
+                    st.error(f"Kendala teknis: {e}")
