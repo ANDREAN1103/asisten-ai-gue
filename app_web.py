@@ -1,29 +1,29 @@
 import streamlit as st
 import google.generativeai as genai
+import time
 
-# --- 1. CONFIG HALAMAN ---
-st.set_page_config(page_title="Andrean AI Pro", layout="centered")
-st.markdown("<h2 style='text-align: center;'>🤖 Chatbot AI BY : ANDREAN</h2>", unsafe_allow_html=True)
+# --- 1. SETUP TAMPILAN ---
+st.set_page_config(page_title="AI Chatbot Gue", page_icon="🤖")
+st.title("🤖 Chatbot AI BY : ANDREAN")
 
-# --- 2. SETUP API KEY LANGSUNG ---
-# Ganti teks di bawah dengan API Key asli lo
-API_KEY = "AIzaSyC-Rsgzx2eXhCBZpzOleycWA1_CtbxBUIg" 
+# --- 2. MASUKKAN API KEY LANGSUNG ---
+# Gue pake kunci yang lo pake di VSC tadi
+API_KEY = "AIzaSyC-Rsgzx2eXhCBZpzOleycWA1_CtbxBUIg"
 genai.configure(api_key=API_KEY)
 
-# JURUS OTOMATIS: Mencari model yang tersedia biar gak Error 404
+# --- 3. JURUS OTOMATIS CARI MODEL ---
 @st.cache_resource
 def get_model():
     try:
-        # Nanya ke Google model apa yang aktif buat akun lo
+        # Nyari model yang beneran aktif di akun lo
         active_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
         return genai.GenerativeModel(active_models[0])
     except:
-        # Cadangan jika pencarian otomatis gagal
         return genai.GenerativeModel('gemini-1.5-flash')
 
 model = get_model()
 
-# --- 3. RIWAYAT CHAT (JAWABAN DI ATAS) ---
+# --- 4. RIWAYAT CHAT ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -31,21 +31,28 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# --- 4. KOLOM TANYA (DI BAWAH) ---
+# --- 5. INPUT CHAT ---
 if prompt := st.chat_input("Tanya apa aja, Bro..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("Lagi mikir..."):
+        placeholder = st.empty()
+        full_response = ""
+        
+        # JURUS ANTI-429 (Mencoba 3 kali kalau server penuh)
+        for i in range(3):
             try:
-                # Memanggil jawaban AI
                 response = model.generate_content(prompt)
-                st.markdown(response.text)
-                st.session_state.messages.append({"role": "assistant", "content": response.text})
+                full_response = response.text
+                break
             except Exception as e:
-                if "429" in str(e):
-                    st.error("Server penuh! Google membatasi akun gratis. Tunggu 1-2 menit ya.")
+                if "429" in str(e) and i < 2:
+                    placeholder.warning(f"Server penuh, nyoba lagi dalam {i+2} detik...")
+                    time.sleep(i + 2)
                 else:
-                    st.error(f"Kendala teknis: {e}")
+                    full_response = f"Aduh Bro, server beneran lagi mogok. Error: {e}"
+        
+        placeholder.markdown(full_response)
+        st.session_state.messages.append({"role": "assistant", "content": full_response})
