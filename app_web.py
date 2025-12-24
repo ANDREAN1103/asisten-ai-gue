@@ -3,10 +3,10 @@ import google.generativeai as genai
 from PIL import Image
 
 # --- CONFIG HALAMAN ---
-st.set_page_config(page_title="Andrean AI Modern", page_icon="🤖", layout="centered")
+st.set_page_config(page_title="Andrean AI Pro", page_icon="🤖", layout="centered")
 
 # --- JUDUL ---
-st.title("🤖 Chatbot AI BY : ANDREAN")
+st.markdown("<h2 style='text-align: center;'>🤖 Chatbot AI BY : ANDREAN</h2>", unsafe_allow_html=True)
 
 # --- SETUP API KEY ---
 API_KEY = "AIzaSyAs2eRiuYGkitmNYqj_HvIhsrQrqWbIIy8"
@@ -18,25 +18,18 @@ def get_model():
 
 model = get_model()
 
-# --- INISIALISASI PESAN ---
+# --- RIWAYAT CHAT (DI ATAS) ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- 1. TAMPILKAN JAWABAN DI ATAS ---
-# Bagian ini akan otomatis scroll ke atas saat ada chat baru
-chat_container = st.container()
-with chat_container:
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-            if "image" in message:
-                st.image(message["image"], width=250)
+# Menampilkan chat agar jawaban AI selalu di atas kolom input
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+        if "image" in message:
+            st.image(message["image"], width=250)
 
-# --- 2. KOLOM BERTANYA DI BAWAH (PERSIS REQUEST LO) ---
-# Di Streamlit, st.chat_input otomatis nempel di bawah layar
-prompt = st.chat_input("Tanya apa aja, Bro...")
-
-# Tombol Tambahan (+) buat Upload Gambar (Opsional di Sidebar biar rapi)
+# --- MENU ALAT (SIDEBAR) ---
 with st.sidebar:
     st.title("🛠️ Menu Alat")
     up_file = st.file_uploader("Kirim Foto", type=["jpg", "png", "jpeg"])
@@ -44,27 +37,31 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
-# --- LOGIKA PROSES ---
-if prompt:
-    user_payload = {"role": "user", "content": prompt}
+# --- KOLOM TANYA (DI BAWAH) ---
+# st.chat_input otomatis akan selalu berada di posisi paling bawah layar
+if prompt := st.chat_input("Tanya apa aja, Bro..."):
     
+    # 1. Simpan pesan user
+    user_payload = {"role": "user", "content": prompt}
     img_data = None
+    
+    # Cek jika ada file yang diupload (Mencegah error image_56f006.png)
     if up_file:
         img_data = Image.open(up_file)
         user_payload["image"] = img_data
     
-    # Simpan ke memori
     st.session_state.messages.append(user_payload)
     
-    # Munculkan pesan user di atas
-    with chat_container:
-        with st.chat_message("user"):
-            st.markdown(prompt)
-            if img_data: st.image(img_data, width=250)
+    # 2. Tampilkan pesan user segera
+    with st.chat_message("user"):
+        st.markdown(prompt)
+        if img_data:
+            st.image(img_data, width=250)
 
-        # Munculkan jawaban AI di atas kolom input
-        with st.chat_message("assistant"):
-            with st.spinner("Lagi mikir..."):
+    # 3. Jawaban AI (Muncul di atas kolom input)
+    with st.chat_message("assistant"):
+        with st.spinner("Lagi mikir..."):
+            try:
                 if img_data:
                     response = model.generate_content([prompt, img_data])
                 else:
@@ -72,3 +69,5 @@ if prompt:
                 
                 st.markdown(response.text)
                 st.session_state.messages.append({"role": "assistant", "content": response.text})
+            except Exception as e:
+                st.error(f"Waduh Bro, ada masalah teknis: {e}")
