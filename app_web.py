@@ -16,15 +16,8 @@ except Exception:
 
 # JURUS OTOMATIS: Biar gak kena Error 404 lagi
 @st.cache_resource
-def get_auto_model():
-    try:
-        # Nanya ke Google: "Model apa yang aktif di akun Andrean?"
-        models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        # Pake model pertama yang dia kasih (pasti ada)
-        return genai.GenerativeModel(models[0])
-    except:
-        # Cadangan terakhir kalo Google lagi pelit
-        return genai.GenerativeModel('gemini-1.5-flash')
+# Ubah modelnya jadi versi '8b' biar lebih tahan banting (Anti-Limit)
+model = genai.GenerativeModel('gemini-1.5-flash-8b')
 
 model = get_auto_model()
 
@@ -53,3 +46,4 @@ if prompt := st.chat_input("Tanya apa aja, Bro..."):
                 st.error("Server penuh! Tunggu 1 menit ya.")
             else:
                 st.error(f"Eror: {e}")
+
