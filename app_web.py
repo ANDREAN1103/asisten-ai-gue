@@ -7,7 +7,7 @@ st.markdown("<h2 style='text-align: center;'>🤖 Chatbot AI BY : ANDREAN</h2>",
 
 # --- 2. SETUP API KEY ---
 # PASTE KUNCI BARU YANG BARU LO BUAT DI SINI!
-API_KEY = "PASTE_DI_SINI_BRO" 
+API_KEY = "AIzaSyDUc4winXU8_u7FEqnSaQal4q6mPCwf6SU" 
 genai.configure(api_key=API_KEY)
 
 # JURUS SAPU JAGAT: Nyari model otomatis biar gak Error 404
@@ -61,3 +61,4 @@ with st.sidebar:
     if st.button("🗑️ Reset Chat"):
         st.session_state.messages = []
         st.rerun()
+
