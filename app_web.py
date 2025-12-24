@@ -52,3 +52,4 @@ if prompt := st.chat_input("Tanya apa aja, Bro..."):
         st.markdown(response.text)
         st.session_state.messages.append({"role": "assistant", "content": response.text})
 
+
