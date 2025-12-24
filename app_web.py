@@ -1,58 +1,51 @@
-import streamlit as st
-import google.generativeai as genai
-import time
-
-# --- 1. SETUP TAMPILAN ---
-st.set_page_config(page_title="AI Chatbot Gue", page_icon="🤖")
-st.title("🤖 Chatbot AI BY : ANDREAN")
-
-# --- 2. MASUKKAN API KEY LANGSUNG ---
-# Gue pake kunci yang lo pake di VSC tadi
-API_KEY = "AIzaSyC-Rsgzx2eXhCBZpzOleycWA1_CtbxBUIg"
-genai.configure(api_key=API_KEY)
-
-# --- 3. JURUS OTOMATIS CARI MODEL ---
-@st.cache_resource
-def get_model():
-    try:
-        # Nyari model yang beneran aktif di akun lo
-        active_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        return genai.GenerativeModel(active_models[0])
-    except:
-        return genai.GenerativeModel('gemini-1.5-flash')
-
-model = get_model()
-
-# --- 4. RIWAYAT CHAT ---
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-# --- 5. INPUT CHAT ---
-if prompt := st.chat_input("Tanya apa aja, Bro..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    with st.chat_message("assistant"):
-        placeholder = st.empty()
-        full_response = ""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            background-color: #e3f2fd; /* Warna biru muda biar seger */
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding-top: 100px;
+        }
+        h1 {
+            color: #1565c0; /* Biru gelap buat judul */
+            text-transform: uppercase;
+        }
+        button {
+            background-color: #ff4081; /* Tombol warna pink biar kontras */
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor:pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        button:hover {
+            background-color: #f50057; /* Warna berubah pas disentuh mouse */
+        }
+        </style>
+</head>
+<body>
+ <h1>CARTEL4D </h1><P>CARTEL4D SITUS SLOT VIRAL DAN GACOR.  <br><br>
+<img src="ANDREAN.JPG.jpg" style="width: 300px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+    
+    <br><br> <button onclick="daftarSekarang()" style="width: 300px;">DAFTAR!</button>
+</body>
+<script>
+        function daftarSekarang() {
+        // Ini perintah untuk mengubah warna background body jadi hitam
+        document.body.style.backgroundColor = "#1a1a1a";
         
-        # JURUS ANTI-429 (Mencoba 3 kali kalau server penuh)
-        for i in range(3):
-            try:
-                response = model.generate_content(prompt)
-                full_response = response.text
-                break
-            except Exception as e:
-                if "429" in str(e) and i < 2:
-                    placeholder.warning(f"Server penuh, nyoba lagi dalam {i+2} detik...")
-                    time.sleep(i + 2)
-                else:
-                    full_response = f"Aduh Bro, server beneran lagi mogok. Error: {e}"
+        // Ini untuk mengubah warna tulisan h1 dan p jadi putih biar kelihatan
+        document.querySelector("h1").style.color = "white";
+        document.querySelector("p").style.color = "#ddd";
         
-        placeholder.markdown(full_response)
-        st.session_state.messages.append({"role": "assistant", "content": full_response})
+        alert("Selamat Bermain! Terimakasih sudah mendaftar!");
+    }
+    </script>
+    </html>
